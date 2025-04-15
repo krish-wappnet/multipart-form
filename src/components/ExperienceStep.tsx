@@ -11,7 +11,6 @@ const ExperienceStep: React.FC = React.memo(() => {
   const errors = useSelector((state: RootState) => state.form.errors);
 
   const handleAddExperience = useCallback(() => {
-    console.log("Add Experience clicked"); // Debug log
     dispatch(
       addExperience({
         jobTitle: "",

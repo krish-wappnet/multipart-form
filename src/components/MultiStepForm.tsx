@@ -1,10 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
-import { setCurrentStep, setErrors } from "../redux/FormSlice";
+import {
+  setCurrentStep,
+  setErrors,
+} from "../redux/FormSlice";
 import { RootState } from "../redux/Store";
 import {
   personalInfoSchema,
@@ -29,7 +32,11 @@ const MultiStepForm: React.FC = () => {
   const [isDark, setIsDark] = useState<boolean>(false);
   const [age, setAge] = useState<number | null>(null);
   const [skipReferences, setSkipReferences] = useState<boolean>(formData.references.length === 0);
-  const [validationCache, setValidationCache] = useState<Record<number, boolean>>({});
+
+  // Load saved data on mount
+  // useEffect(() => {
+  //   dispatch(loadFormData());
+  // }, [dispatch]);
 
   // Dark mode toggle
   useEffect(() => {
@@ -61,12 +68,9 @@ const MultiStepForm: React.FC = () => {
     }
   }, [formData.personalInfo.dateOfBirth]);
 
-  // Validation logic with caching
+  // Validation logic
   const validateStep = useCallback(
     (step: number): boolean => {
-      if (validationCache[step] !== undefined) {
-        return validationCache[step];
-      }
       try {
         if (step === 1) {
           personalInfoSchema.parse(formData.personalInfo);
@@ -82,17 +86,13 @@ const MultiStepForm: React.FC = () => {
           formSchema.parse(formData);
         }
         dispatch(setErrors({}));
-        setValidationCache((prev) => ({ ...prev, [step]: true }));
         return true;
       } catch (error: any) {
-        console.error(`Validation error for step ${step}:`, error);
-        const errorData = error.formErrors?.fieldErrors || error.errors || {};
-        dispatch(setErrors(errorData));
-        setValidationCache((prev) => ({ ...prev, [step]: false }));
+        dispatch(setErrors(error.formErrors?.fieldErrors || error.errors));
         return false;
       }
     },
-    [dispatch, formData, skipReferences, validationCache]
+    [dispatch, formData, skipReferences]
   );
 
   // Navigation
@@ -110,35 +110,6 @@ const MultiStepForm: React.FC = () => {
     dispatch(setCurrentStep(Math.max(1, currentStep - 1)));
   }, [currentStep, dispatch]);
 
-  // Step labels for sidebar
-  const stepLabels = [
-    { step: 1, label: "Personal Info" },
-    { step: 2, label: "Experience" },
-    { step: 3, label: "Education" },
-    { step: 4, label: "Skills" },
-    { step: 5, label: "References" },
-    { step: 6, label: "Summary" },
-    { step: 7, label: "Submit" },
-  ];
-
-  // Memoized step completion status
-  const isStepCompleted = useCallback(
-    (step: number): boolean => {
-      if (step >= currentStep) return false;
-      if (step === 3 && formData.personalInfo.educationLevel !== "Graduate or higher") return true;
-      if (step === 5 && skipReferences) return true;
-      return validateStep(step);
-    },
-    [currentStep, formData.personalInfo.educationLevel, skipReferences, validateStep]
-  );
-
-  const stepCompletionStatus = useMemo(() => {
-    return stepLabels.reduce((acc, { step }) => {
-      acc[step] = isStepCompleted(step);
-      return acc;
-    }, {} as Record<number, boolean>);
-  }, [isStepCompleted]);
-
   // Render step
   const renderStep = useCallback(() => {
     switch (currentStep) {
@@ -147,13 +118,20 @@ const MultiStepForm: React.FC = () => {
       case 2:
         return <ExperienceStep />;
       case 3:
-        return <EducationStep />;
+        return <EducationStep/>;
       case 4:
         return <SkillsStep />;
       case 5:
-        return <ReferencesStep skipReferences={skipReferences} setSkipReferences={setSkipReferences} />;
+        return (
+          <ReferencesStep
+          skipReferences={skipReferences}
+          setSkipReferences={setSkipReferences}
+        />
+        );
       case 6:
-        return <SummaryStep skipReferences={skipReferences} age={age} />;
+        return (
+          <SummaryStep skipReferences={skipReferences} age={age} />
+        );
       case 7:
         return <SubmitStep validateStep={validateStep} />;
       default:
@@ -162,120 +140,64 @@ const MultiStepForm: React.FC = () => {
   }, [currentStep, formData, errors, dispatch, age, skipReferences]);
 
   return (
-    <div
-      className={`min-h-screen p-6 ${
-        isDark ? "dark bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
-      }`}
-    >
-      <div className="max-w-5xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Application Form</h1>
+    <div className={`min-h-screen p-6 ${isDark ? "dark bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}>
+      <div className="max-w-3xl mx-auto">
+        <div className="flex justify-between mb-6">
+          <h1 className="text-2xl font-bold">Multi-Step Form</h1>
           <button
             onClick={toggleDarkMode}
-            className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+            className="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
             aria-label="Toggle dark mode"
           >
-            {isDark ? "🌞 Light" : "🌙 Dark"}
+            {isDark ? "dark" : "light"}
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-            <h2 className="text-lg font-semibold mb-4">Progress</h2>
-            <ul className="space-y-2">
-              {stepLabels.map(({ step, label }) => {
-                const isActive = currentStep === step;
-                const isCompleted = stepCompletionStatus[step];
-                const isSkipped =
-                  (step === 3 && formData.personalInfo.educationLevel !== "Graduate or higher") ||
-                  (step === 5 && skipReferences);
-
-                return (
-                  <li
-                    key={step}
-                    className={`flex items-center p-2 rounded-lg transition-all duration-200 ${
-                      isActive
-                        ? "bg-blue-500 text-white"
-                        : isCompleted
-                        ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                        : isSkipped
-                        ? "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    } hover:bg-blue-100 dark:hover:bg-blue-900 cursor-pointer`}
-                    onClick={() => {
-                      if (step <= currentStep || isCompleted) {
-                        dispatch(setCurrentStep(step));
-                      }
-                    }}
-                  >
-                    <span
-                      className={`w-6 h-6 flex items-center justify-center rounded-full mr-2 ${
-                        isActive
-                          ? "bg-white text-blue-500"
-                          : isCompleted
-                          ? "bg-green-500 text-white"
-                          : isSkipped
-                          ? "bg-gray-400 text-white"
-                          : "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
-                      }`}
-                    >
-                      {isCompleted ? "✓" : step}
-                    </span>
-                    {label}
-                    {isSkipped && <span className="ml-2 text-xs italic">(Skipped)</span>}
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="mt-4">
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${((currentStep - 1) / 6) * 100}%` }}
-                ></div>
-              </div>
-              <p className="text-sm mt-2 text-center">
-                {Math.round(((currentStep - 1) / 6) * 100)}% Complete
-              </p>
+        <div className="flex mb-6">
+          {[1, 2, 3, 4, 5, 6, 7].map((step) => (
+            <div
+              key={step}
+              className={`flex-1 text-center py-2 ${
+                currentStep === step ? "bg-blue-500 text-white" : "bg-gray-300 dark:bg-gray-700"
+              }`}
+            >
+              Step {step}
             </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                {renderStep()}
-                <div className="flex justify-between mt-6">
-                  {currentStep > 1 && (
-                    <button
-                      onClick={prevStep}
-                      className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
-                      aria-label="Previous step"
-                    >
-                      Previous
-                    </button>
-                  )}
-                  {currentStep < 7 && (
-                    <button
-                      onClick={nextStep}
-                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                      aria-label="Next step"
-                    >
-                      Next
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
+          ))}
         </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg"
+          >
+            {renderStep()}
+            <div className="flex justify-between mt-6">
+              {currentStep > 1 && (
+                <button
+                  onClick={prevStep}
+                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                  aria-label="Previous step"
+                >
+                  Previous
+                </button>
+              )}
+              {currentStep < 7 && (
+                <button
+                  onClick={nextStep}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  aria-label="Next step"
+                >
+                  Next
+                </button>
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -9,10 +9,10 @@ const EducationStep: React.FC = React.memo(() => {
   const formData = useSelector((state: RootState) => state.form.formData);
   const errors = useSelector((state: RootState) => state.form.errors);
 
-  console.log("Current education entries:", formData.education); // Debug log
+
 
   const handleAddEducation = useCallback(() => {
-    console.log("Add Education clicked");
+
     dispatch(
       addEducation({
         schoolName: "",
@@ -73,7 +73,7 @@ const EducationStep: React.FC = React.memo(() => {
 
   const handleRemoveEducation = useCallback(
     (index: number) => {
-      console.log("Remove Education clicked for index:", index); // Debug log
+
       dispatch(removeEducation(index));
     },
     [dispatch]

@@ -15,11 +15,9 @@ const SummaryStep: React.FC<SummaryStepProps> = React.memo(({ skipReferences, ag
   const formData = useSelector((state: RootState) => state.form.formData);
   const totalExperience = calculateTotalExperience(formData.experiences);
 
-  console.log("Current formData:", formData); // Debug log
 
   const handleEditStep = useCallback(
     (step: number) => {
-      console.log("Navigating to step:", step); // Debug log
       dispatch(setCurrentStep(step));
     },
     [dispatch]

@@ -12,22 +12,18 @@ const SubmitStep: React.FC<SubmitStepProps> = React.memo(({ validateStep }) => {
   const formData = useSelector((state: RootState) => state.form.formData);
   const errors = useSelector((state: RootState) => state.form.errors);
 
-  console.log("Terms agreed:", formData.termsAgreed); 
 
   const handleToggleTerms = useCallback(
     (checked: boolean) => {
-      console.log("Setting terms agreed to:", checked); 
       dispatch(setTermsAgreed(checked));
     },
     [dispatch]
   );
 
   const handleSubmit = useCallback(() => {
-    console.log("Submit clicked"); 
     if (validateStep(7)) {
       alert("Form submitted successfully!");
       dispatch(resetForm());
-      console.log("After resetForm dispatch, formData should be cleared");
     } else {
       console.log("Validation failed:", errors); 
     }

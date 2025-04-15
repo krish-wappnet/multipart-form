@@ -12,11 +12,10 @@ const SkillsStep: React.FC = React.memo(() => {
   const errors = useSelector((state: RootState) => state.form.errors);
   const [customSkill, setCustomSkill] = useState<string>("");
 
-  console.log("Current skills:", formData.skills); // Debug log
+
 
   const handleAddSkill = useCallback(
     (skillName: string) => {
-      console.log("Adding skill:", skillName); // Debug log
       if (formData.skills.some((s: Skill) => s.name.toLowerCase() === skillName.toLowerCase())) {
         alert("Skill already added!");
         return;
@@ -29,7 +28,6 @@ const SkillsStep: React.FC = React.memo(() => {
 
   const handleRemoveSkill = useCallback(
     (index: number) => {
-      console.log("Removing skill at index:", index); // Debug log
       dispatch(removeSkill(index));
     },
     [dispatch]

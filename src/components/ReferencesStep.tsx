@@ -15,10 +15,9 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
     const formData = useSelector((state: RootState) => state.form.formData);
     const errors = useSelector((state: RootState) => state.form.errors);
 
-    console.log("Current references:", formData.references); // Debug log
 
     const handleAddReference = useCallback(() => {
-      console.log("Add Reference clicked"); // Debug log
+
       dispatch(
         addReference({
           name: "",
@@ -31,17 +30,16 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
 
     const handleRemoveReference = useCallback(
       (index: number) => {
-        console.log("Remove Reference clicked for index:", index); // Debug log
+       
         dispatch(removeReference(index));
       },
       [dispatch]
     );
 
     const handleClearReferences = useCallback(() => {
-      console.log("Clearing all references"); // Debug log
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       formData.references.forEach((_) => {
-        dispatch(removeReference(0)); // Always remove index 0 as array shrinks
+        dispatch(removeReference(0)); 
       });
     }, [dispatch, formData.references]);
 

@@ -10,13 +10,11 @@ export const personalInfoSchema = z.object({
     .string()
     .min(1, "Phone number is required")
     .transform((val) => {
-      console.log("Transforming phoneNumber:", val);
       return val.replace(/[\s-]/g, "");
     })
     .refine(
       (val) => {
         const isValid = phoneRegex.test(val);
-        console.log("Phone validation:", { val, isValid });
         return isValid;
       },
       {

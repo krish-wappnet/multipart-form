@@ -13,12 +13,9 @@ interface PersonalInfoStepProps {
 }
 
 const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData, errors, dispatch, age }) => {
-  console.log("PersonalInfoStep formData:", formData);
-  console.log("Current phoneNumber:", formData.personalInfo.phoneNumber);
 
   const handleFullNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("Full Name onChange:", e.target.value);
       dispatch(updatePersonalInfo({ fullName: e.target.value }));
     },
     [dispatch]
@@ -26,7 +23,6 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
 
   const handleEmailChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("Email onChange:", e.target.value);
       dispatch(updatePersonalInfo({ email: e.target.value }));
     },
     [dispatch]
@@ -34,13 +30,13 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
 
   const handlePhoneChange = useCallback(
     (value: string) => {
-      console.log("PhoneInput raw value:", value);
-      // Normalize: remove spaces, hyphens; ensure + prefix
+     
+     
       let normalizedValue = value.replace(/[\s-]/g, "");
       if (!normalizedValue.startsWith("+")) {
-        normalizedValue = `+${normalizedValue}`; // Default to + if missing
+        normalizedValue = `+${normalizedValue}`; 
       }
-      console.log("PhoneInput normalized:", normalizedValue);
+  
       dispatch(updatePersonalInfo({ phoneNumber: normalizedValue }));
     },
     [dispatch]
@@ -48,7 +44,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
 
   const handleDobChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("DOB onChange:", e.target.value);
+
       dispatch(updatePersonalInfo({ dateOfBirth: e.target.value }));
     },
     [dispatch]
@@ -56,16 +52,14 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
 
   const handleGenderChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value as PersonalInfo["gender"];
-      console.log("Gender onChange:", value);
+      const value = e.target.value as PersonalInfo["gender"];   
       dispatch(updatePersonalInfo({ gender: value }));
     },
     [dispatch]
   );
 
   const handleCountryChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("Country onChange:", e.target.value);
+    (e: React.ChangeEvent<HTMLInputElement>) => {    
       dispatch(
         updatePersonalInfo({
           currentLocation: { ...formData.personalInfo.currentLocation, country: e.target.value },
@@ -77,7 +71,6 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
 
   const handleCityChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("City onChange:", e.target.value);
       dispatch(
         updatePersonalInfo({
           currentLocation: { ...formData.personalInfo.currentLocation, city: e.target.value },
@@ -90,7 +83,6 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
   const handleEducationLevelChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value as PersonalInfo["educationLevel"];
-      console.log("Education Level onChange:", value);
       dispatch(updatePersonalInfo({ educationLevel: value }));
     },
     [dispatch]
