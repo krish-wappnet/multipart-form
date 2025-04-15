@@ -1,12 +1,28 @@
 import { z } from "zod";
 
-const phoneRegex = /^\+\d{1,3}\s?\d{9,15}$/;
+const phoneRegex = /^\+\d{10,18}$/;
 const nameRegex = /^[a-zA-Z\s]+$/;
 
 export const personalInfoSchema = z.object({
   fullName: z.string().regex(nameRegex, "Name must contain only letters and spaces").min(1, "Name is required"),
   email: z.string().email("Invalid email format"),
-  phoneNumber: z.string().regex(phoneRegex, "Invalid phone number format (e.g., +91 1234567890)"),
+  phoneNumber: z
+    .string()
+    .min(1, "Phone number is required")
+    .transform((val) => {
+      console.log("Transforming phoneNumber:", val);
+      return val.replace(/[\s-]/g, "");
+    })
+    .refine(
+      (val) => {
+        const isValid = phoneRegex.test(val);
+        console.log("Phone validation:", { val, isValid });
+        return isValid;
+      },
+      {
+        message: "Invalid phone number format (e.g., +917383923807)",
+      }
+    ),
   dateOfBirth: z.string().optional(),
   gender: z.enum(["Male", "Female", "Other", "Prefer not to say"]),
   currentLocation: z.object({
@@ -59,3 +75,10 @@ export const formSchema = z.object({
   references: z.array(referenceSchema).optional(),
   termsAgreed: z.boolean().refine((val) => val, { message: "You must agree to the terms" }),
 });
+
+export type PersonalInfo = z.infer<typeof personalInfoSchema>;
+export type Experience = z.infer<typeof experienceSchema>;
+export type Education = z.infer<typeof educationSchema>;
+export type Skill = z.infer<typeof skillSchema>;
+export type Reference = z.infer<typeof referenceSchema>;
+export type FormData = z.infer<typeof formSchema>;
