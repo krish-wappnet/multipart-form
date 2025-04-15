@@ -27,6 +27,7 @@ const SubmitStep: React.FC<SubmitStepProps> = React.memo(({ validateStep }) => {
     if (validateStep(7)) {
       alert("Form submitted successfully!");
       dispatch(resetForm());
+      console.log("After resetForm dispatch, formData should be cleared");
     } else {
       console.log("Validation failed:", errors); 
     }

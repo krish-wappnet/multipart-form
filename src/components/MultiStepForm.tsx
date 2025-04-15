@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import {
-  loadFormData,
   setCurrentStep,
   setErrors,
 } from "../redux/FormSlice";
@@ -35,9 +34,9 @@ const MultiStepForm: React.FC = () => {
   const [skipReferences, setSkipReferences] = useState<boolean>(formData.references.length === 0);
 
   // Load saved data on mount
-  useEffect(() => {
-    dispatch(loadFormData());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(loadFormData());
+  // }, [dispatch]);
 
   // Dark mode toggle
   useEffect(() => {
