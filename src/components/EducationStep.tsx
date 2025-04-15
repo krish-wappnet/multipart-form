@@ -39,13 +39,31 @@ const EducationStep: React.FC = React.memo(() => {
   );
 
   const handleAddCertificate = useCallback(
-    (index: number, certName: string, file?: File) => {
+    (index: number, file: File) => {
       const currentCertificates = formData.education[index].certificates || [];
+      // Use the file name as the certificate name, or customize as needed
+      const certName = file.name;
       dispatch(
         updateEducation({
           index,
           data: {
             certificates: [...currentCertificates, { name: certName, file }],
+          },
+        })
+      );
+    },
+    [dispatch, formData.education]
+  );
+
+  const handleRemoveCertificate = useCallback(
+    (eduIndex: number, certIndex: number) => {
+      const currentCertificates = formData.education[eduIndex].certificates || [];
+      const updatedCertificates = currentCertificates.filter((_, i) => i !== certIndex);
+      dispatch(
+        updateEducation({
+          index: eduIndex,
+          data: {
+            certificates: updatedCertificates,
           },
         })
       );
@@ -156,30 +174,28 @@ const EducationStep: React.FC = React.memo(() => {
             <div>
               <label className="block text-sm font-medium">Certificates</label>
               <input
-                type="text"
-                placeholder="Certificate Name"
-                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (e.key === "Enter" && e.currentTarget.value) {
-                    handleAddCertificate(index, e.currentTarget.value);
-                    e.currentTarget.value = "";
+                type="file"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleAddCertificate(index, file);
+                    e.target.value = ""; 
                   }
                 }}
                 className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                accept=".pdf,.jpg,.jpeg,.png" 
               />
               <div className="mt-2">
                 {edu.certificates?.map((cert: { name: string; file?: File }, certIndex: number) => (
-                  <div key={certIndex} className="flex items-center">
+                  <div key={certIndex} className="flex items-center justify-between">
                     <span>{cert.name}</span>
-                    <input
-                      type="file"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          handleAddCertificate(index, cert.name, file);
-                        }
-                      }}
-                      className="ml-2"
-                    />
+                    <button
+                      onClick={() => handleRemoveCertificate(index, certIndex)}
+                      className="text-red-500 hover:text-red-700 text-sm"
+                      aria-label={`Remove certificate ${cert.name}`}
+                    >
+                      Remove
+                    </button>
                   </div>
                 ))}
               </div>
