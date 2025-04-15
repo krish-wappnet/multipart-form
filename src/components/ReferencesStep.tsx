@@ -40,7 +40,7 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
     const handleClearReferences = useCallback(() => {
       console.log("Clearing all references"); // Debug log
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      formData.references.forEach((_, index) => {
+      formData.references.forEach((_) => {
         dispatch(removeReference(0)); // Always remove index 0 as array shrinks
       });
     }, [dispatch, formData.references]);
