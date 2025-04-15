@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import PhoneInput from 'react-phone-input-2';
 import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,6 +34,8 @@ import {
   formSchema,
 } from "../utils/Validations";
 import { calculateAge, checkOverlappingDates, calculateTotalExperience } from "../utils/dateUtils";
+
+import 'react-phone-input-2/lib/style.css';
 
 const predefinedSkills = ["React", "Node.js", "Python", "Docker", "TypeScript"];
 
@@ -110,16 +113,34 @@ const PersonalInfoStep = React.memo(({ formData, errors, dispatch, age }: any) =
       </div>
       <div>
         <label className="block text-sm font-medium">Phone Number</label>
-        <input
-          type="tel"
-          value={formData.personalInfo.phoneNumber}
-          onChange={handlePhoneChange}
-          placeholder="+91 1234567890"
-          className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-          aria-required="true"
-        />
-        {errors.phoneNumber && <p className="text-red-500 text-sm">{errors.phoneNumber}</p>}
-      </div>
+        <div className="w-full">
+            <PhoneInput
+            country={'in'}
+            value={formData.personalInfo.phoneNumber}
+            onChange={(value: string) =>
+                handlePhoneChange({
+                target: {
+                    value,
+                },
+                } as React.ChangeEvent<HTMLInputElement>)
+            }
+            inputProps={{
+                name: 'phoneNumber',
+                required: true,
+                autoFocus: false,
+            }}
+            inputClass="!w-full !p-2 !pl-14 !border !rounded !text-sm !bg-white dark:!bg-gray-700 dark:!border-gray-600"
+            buttonClass="!bg-gray-100 dark:!bg-gray-600 !border-r dark:!border-gray-500 !rounded-l"
+            containerClass="!w-full"
+            dropdownClass="!bg-white dark:!bg-gray-700 !text-sm"
+            enableSearch
+            />
+        </div>
+        {errors.phoneNumber && (
+            <p className="text-red-500 text-sm">{errors.phoneNumber}</p>
+        )}
+        </div>
+
       <div>
         <label className="block text-sm font-medium">Date of Birth</label>
         <input
