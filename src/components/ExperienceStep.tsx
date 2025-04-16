@@ -28,6 +28,17 @@ const ExperienceStep: React.FC = React.memo(() => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Work Experience</h2>
+      {formData.experiences.length === 0 && (
+        <motion.p
+          className="text-sm text-red-500"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          Please add at least one experience.
+        </motion.p>
+      )}
       {formData.experiences.map((exp: Experience, index: number) => (
         <div
           key={index}

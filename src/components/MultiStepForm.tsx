@@ -86,8 +86,69 @@ const MultiStepForm: React.FC = () => {
         }
         dispatch(setErrors({}));
         return true;
-      } catch (error: any) {
-        dispatch(setErrors(error.formErrors?.fieldErrors || error.errors));
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          const formattedErrors: any = {};
+          if (step === 1) {
+            formattedErrors.personalInfo = error.flatten().fieldErrors;
+          } else if (step === 2) {
+            if (error.errors.some((e) => e.path.length === 0)) {
+              formattedErrors.experiences = "At least one experience is required";
+            } else {
+              formattedErrors.experiences = error.errors.reduce((acc: any[], e) => {
+                const index = Number(e.path[0]);
+                if (!acc[index]) acc[index] = {};
+                const field = e.path[1] as string;
+                acc[index][field] = e.message;
+                return acc;
+              }, []);
+            }
+          } else if (step === 3) {
+            if (error.errors.some((e) => e.path.length === 0)) {
+              formattedErrors.education = "At least one education entry is required";
+            } else {
+              formattedErrors.education = error.errors.reduce((acc: any[], e) => {
+                const index = Number(e.path[0]);
+                if (!acc[index]) acc[index] = {};
+                const field = e.path[1] as string;
+                acc[index][field] = e.message;
+                return acc;
+              }, []);
+            }
+          } else if (step === 4) {
+            if (error.errors.some((e) => e.path.length === 0)) {
+              formattedErrors.skills = "At least one skill is required";
+            } else {
+              formattedErrors.skills = error.errors.reduce((acc: any[], e) => {
+                const index = Number(e.path[0]);
+                if (!acc[index]) acc[index] = {};
+                const field = e.path[1] as string;
+                acc[index][field] = e.message;
+                return acc;
+              }, []);
+            }
+          } else if (step === 5) {
+            if (error.errors.some((e) => e.path.length === 0)) {
+              formattedErrors.references = "At least one reference is required";
+            } else {
+              formattedErrors.references = error.errors.reduce((acc: any[], e) => {
+                const index = Number(e.path[0]);
+                if (!acc[index]) acc[index] = {};
+                const field = e.path[1] as string;
+                acc[index][field] = e.message;
+                return acc;
+              }, []);
+            }
+          } else if (step === 7) {
+            formattedErrors.personalInfo = error.flatten().fieldErrors.personalInfo;
+            formattedErrors.experiences = error.flatten().fieldErrors.experiences;
+            formattedErrors.education = error.flatten().fieldErrors.education;
+            formattedErrors.skills = error.flatten().fieldErrors.skills;
+            formattedErrors.references = error.flatten().fieldErrors.references;
+            formattedErrors.termsAgreed = error.flatten().fieldErrors.termsAgreed?.[0];
+          }
+          dispatch(setErrors(formattedErrors));
+        }
         return false;
       }
     },

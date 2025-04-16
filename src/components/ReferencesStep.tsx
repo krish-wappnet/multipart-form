@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../redux/Store";
@@ -37,7 +38,7 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
     );
 
     const handleClearReferences = useCallback(() => {
-      formData.references.forEach((_, i) => {
+      formData.references.forEach((_,) => {
         dispatch(removeReference(0)); 
       });
     }, [dispatch, formData.references]);
