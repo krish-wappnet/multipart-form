@@ -4,10 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
-import {
-  setCurrentStep,
-  setErrors,
-} from "../redux/FormSlice";
+import { setCurrentStep, setErrors } from "../redux/FormSlice";
 import { RootState } from "../redux/Store";
 import {
   personalInfoSchema,
@@ -26,6 +23,16 @@ import ReferencesStep from "./ReferencesStep";
 import SummaryStep from "./SummaryStep";
 import SubmitStep from "./SubmitStep";
 
+const steps = [
+  { id: 1, label: "Personal Info" },
+  { id: 2, label: "Experience" },
+  { id: 3, label: "Education" },
+  { id: 4, label: "Skills" },
+  { id: 5, label: "References" },
+  { id: 6, label: "Summary" },
+  { id: 7, label: "Submit" },
+];
+
 const MultiStepForm: React.FC = () => {
   const dispatch = useDispatch();
   const { formData, currentStep, errors } = useSelector((state: RootState) => state.form);
@@ -33,12 +40,6 @@ const MultiStepForm: React.FC = () => {
   const [age, setAge] = useState<number | null>(null);
   const [skipReferences, setSkipReferences] = useState<boolean>(formData.references.length === 0);
 
-  // Load saved data on mount
-  // useEffect(() => {
-  //   dispatch(loadFormData());
-  // }, [dispatch]);
-
-  // Dark mode toggle
   useEffect(() => {
     const saved = localStorage.getItem("darkMode");
     if (saved) {
@@ -59,7 +60,6 @@ const MultiStepForm: React.FC = () => {
     });
   }, []);
 
-  // Calculate age when DOB changes
   useEffect(() => {
     if (formData.personalInfo.dateOfBirth) {
       setAge(calculateAge(formData.personalInfo.dateOfBirth));
@@ -68,7 +68,6 @@ const MultiStepForm: React.FC = () => {
     }
   }, [formData.personalInfo.dateOfBirth]);
 
-  // Validation logic
   const validateStep = useCallback(
     (step: number): boolean => {
       try {
@@ -95,7 +94,6 @@ const MultiStepForm: React.FC = () => {
     [dispatch, formData, skipReferences]
   );
 
-  // Navigation
   const nextStep = useCallback(() => {
     if (validateStep(currentStep)) {
       let next = currentStep + 1;
@@ -110,7 +108,6 @@ const MultiStepForm: React.FC = () => {
     dispatch(setCurrentStep(Math.max(1, currentStep - 1)));
   }, [currentStep, dispatch]);
 
-  // Render step
   const renderStep = useCallback(() => {
     switch (currentStep) {
       case 1:
@@ -118,20 +115,13 @@ const MultiStepForm: React.FC = () => {
       case 2:
         return <ExperienceStep />;
       case 3:
-        return <EducationStep/>;
+        return <EducationStep />;
       case 4:
         return <SkillsStep />;
       case 5:
-        return (
-          <ReferencesStep
-          skipReferences={skipReferences}
-          setSkipReferences={setSkipReferences}
-        />
-        );
+        return <ReferencesStep skipReferences={skipReferences} setSkipReferences={setSkipReferences} />;
       case 6:
-        return (
-          <SummaryStep skipReferences={skipReferences} age={age} />
-        );
+        return <SummaryStep skipReferences={skipReferences} age={age} />;
       case 7:
         return <SubmitStep validateStep={validateStep} />;
       default:
@@ -149,21 +139,60 @@ const MultiStepForm: React.FC = () => {
             className="p-2 rounded-full bg-gray-200 dark:bg-gray-700"
             aria-label="Toggle dark mode"
           >
-            {isDark ? "dark" : "light"}
+            {isDark ? "🌙" : "☀️"}
           </button>
         </div>
 
-        <div className="flex mb-6">
-          {[1, 2, 3, 4, 5, 6, 7].map((step) => (
-            <div
-              key={step}
-              className={`flex-1 text-center py-2 ${
-                currentStep === step ? "bg-blue-500 text-white" : "bg-gray-300 dark:bg-gray-700"
-              }`}
-            >
-              Step {step}
-            </div>
-          ))}
+        {/* Stepper UI */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between relative">
+            {steps.map((step, index) => (
+              <React.Fragment key={step.id}>
+                <div
+                  className="flex flex-col items-center z-10"
+                  aria-current={currentStep === step.id ? "step" : undefined}
+                >
+                  <div
+                    className={`w-10 h-10 flex items-center justify-center rounded-full border-2 transition-colors duration-300 ${
+                      currentStep > step.id
+                        ? "bg-green-500 border-green-500 text-white"
+                        : currentStep === step.id
+                        ? "bg-blue-500 border-blue-500 text-white"
+                        : "bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    {currentStep > step.id ? (
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      step.id
+                    )}
+                  </div>
+                  <span
+                    className={`mt-2 text-sm font-medium text-center ${
+                      currentStep >= step.id
+                        ? "text-gray-900 dark:text-white"
+                        : "text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    {step.label}
+                  </span>
+                </div>
+                {index < steps.length - 1 && (
+                  <div
+                    className={`flex-1 h-1 mx-2 transition-colors duration-300 ${
+                      currentStep > step.id
+                        ? "bg-green-500"
+                        : currentStep === step.id
+                        ? "bg-blue-500"
+                        : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
 
         <AnimatePresence mode="wait">

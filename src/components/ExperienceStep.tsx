@@ -4,6 +4,7 @@ import { RootState } from "../redux/Store";
 import { Experience } from "../types/form";
 import { checkOverlappingDates } from "../utils/dateUtils";
 import { addExperience, updateExperience, removeExperience } from "../redux/FormSlice";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ExperienceStep: React.FC = React.memo(() => {
   const dispatch = useDispatch();
@@ -25,26 +26,38 @@ const ExperienceStep: React.FC = React.memo(() => {
   }, [dispatch]);
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Work Experience</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Work Experience</h2>
       {formData.experiences.map((exp: Experience, index: number) => (
-        <div key={index} className="border p-4 rounded dark:border-gray-600">
-          <div className="flex justify-between">
-            <h3 className="text-lg font-medium">Experience {index + 1}</h3>
+        <div
+          key={index}
+          className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-600"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Experience {index + 1}
+            </h3>
             {formData.experiences.length > 1 && (
               <button
                 onClick={() => dispatch(removeExperience(index))}
-                className="text-red-500 hover:text-red-700"
+                className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                 aria-label={`Remove experience ${index + 1}`}
               >
                 Remove
               </button>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Job Title */}
             <div>
-              <label className="block text-sm font-medium">Job Title</label>
+              <label
+                htmlFor={`jobTitle-${index}`}
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+              >
+                Job Title
+              </label>
               <input
+                id={`jobTitle-${index}`}
                 type="text"
                 value={exp.jobTitle}
                 onChange={(e) =>
@@ -55,16 +68,39 @@ const ExperienceStep: React.FC = React.memo(() => {
                     })
                   )
                 }
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 aria-required="true"
+                aria-invalid={!!errors?.experiences?.[index]?.jobTitle}
+                aria-describedby={
+                  errors?.experiences?.[index]?.jobTitle ? `jobTitle-error-${index}` : undefined
+                }
               />
-              {errors?.experiences?.[index]?.jobTitle && (
-                <p className="text-red-500 text-sm">{errors.experiences[index].jobTitle}</p>
-              )}
+              <AnimatePresence>
+                {errors?.experiences?.[index]?.jobTitle && (
+                  <motion.p
+                    id={`jobTitle-error-${index}`}
+                    className="mt-1 text-sm text-red-500"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {errors.experiences[index].jobTitle}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
+
+            {/* Company Name */}
             <div>
-              <label className="block text-sm font-medium">Company Name</label>
+              <label
+                htmlFor={`companyName-${index}`}
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+              >
+                Company Name
+              </label>
               <input
+                id={`companyName-${index}`}
                 type="text"
                 value={exp.companyName}
                 onChange={(e) =>
@@ -75,16 +111,39 @@ const ExperienceStep: React.FC = React.memo(() => {
                     })
                   )
                 }
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 aria-required="true"
+                aria-invalid={!!errors?.experiences?.[index]?.companyName}
+                aria-describedby={
+                  errors?.experiences?.[index]?.companyName ? `companyName-error-${index}` : undefined
+                }
               />
-              {errors?.experiences?.[index]?.companyName && (
-                <p className="text-red-500 text-sm">{errors.experiences[index].companyName}</p>
-              )}
+              <AnimatePresence>
+                {errors?.experiences?.[index]?.companyName && (
+                  <motion.p
+                    id={`companyName-error-${index}`}
+                    className="mt-1 text-sm text-red-500"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {errors.experiences[index].companyName}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
+
+            {/* Employment Type */}
             <div>
-              <label className="block text-sm font-medium">Employment Type</label>
+              <label
+                htmlFor={`employmentType-${index}`}
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+              >
+                Employment Type
+              </label>
               <select
+                id={`employmentType-${index}`}
                 value={exp.employmentType}
                 onChange={(e) =>
                   dispatch(
@@ -94,7 +153,7 @@ const ExperienceStep: React.FC = React.memo(() => {
                     })
                   )
                 }
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
                 <option value="Full-time">Full-time</option>
                 <option value="Part-time">Part-time</option>
@@ -103,9 +162,17 @@ const ExperienceStep: React.FC = React.memo(() => {
                 <option value="Freelance">Freelance</option>
               </select>
             </div>
+
+            {/* Start Date */}
             <div>
-              <label className="block text-sm font-medium">Start Date</label>
+              <label
+                htmlFor={`startDate-${index}`}
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+              >
+                Start Date
+              </label>
               <input
+                id={`startDate-${index}`}
                 type="date"
                 value={exp.startDate}
                 onChange={(e) =>
@@ -116,17 +183,40 @@ const ExperienceStep: React.FC = React.memo(() => {
                     })
                   )
                 }
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 aria-required="true"
+                aria-invalid={!!errors?.experiences?.[index]?.startDate}
+                aria-describedby={
+                  errors?.experiences?.[index]?.startDate ? `startDate-error-${index}` : undefined
+                }
               />
-              {errors?.experiences?.[index]?.startDate && (
-                <p className="text-red-500 text-sm">{errors.experiences[index].startDate}</p>
-              )}
+              <AnimatePresence>
+                {errors?.experiences?.[index]?.startDate && (
+                  <motion.p
+                    id={`startDate-error-${index}`}
+                    className="mt-1 text-sm text-red-500"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {errors.experiences[index].startDate}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
+
+            {/* End Date */}
             {!exp.currentlyWorking && (
               <div>
-                <label className="block text-sm font-medium">End Date</label>
+                <label
+                  htmlFor={`endDate-${index}`}
+                  className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+                >
+                  End Date
+                </label>
                 <input
+                  id={`endDate-${index}`}
                   type="date"
                   value={exp.endDate || ""}
                   onChange={(e) =>
@@ -137,16 +227,37 @@ const ExperienceStep: React.FC = React.memo(() => {
                       })
                     )
                   }
-                  className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                  className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  aria-invalid={!!errors?.experiences?.[index]?.endDate}
+                  aria-describedby={
+                    errors?.experiences?.[index]?.endDate ? `endDate-error-${index}` : undefined
+                  }
                 />
-                {errors?.experiences?.[index]?.endDate && (
-                  <p className="text-red-500 text-sm">{errors.experiences[index].endDate}</p>
-                )}
+                <AnimatePresence>
+                  {errors?.experiences?.[index]?.endDate && (
+                    <motion.p
+                      id={`endDate-error-${index}`}
+                      className="mt-1 text-sm text-red-500"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {errors.experiences[index].endDate}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
             )}
-            <div>
-              <label className="block text-sm font-medium">
+
+            {/* Currently Working */}
+            <div className="flex items-center">
+              <label
+                htmlFor={`currentlyWorking-${index}`}
+                className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200"
+              >
                 <input
+                  id={`currentlyWorking-${index}`}
                   type="checkbox"
                   checked={exp.currentlyWorking}
                   onChange={(e) =>
@@ -160,14 +271,22 @@ const ExperienceStep: React.FC = React.memo(() => {
                       })
                     )
                   }
-                  className="mr-2"
+                  className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                 />
                 Currently Working
               </label>
             </div>
-            <div>
-              <label className="block text-sm font-medium">Responsibilities</label>
+
+            {/* Responsibilities */}
+            <div className="md:col-span-2">
+              <label
+                htmlFor={`responsibilities-${index}`}
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+              >
+                Responsibilities
+              </label>
               <textarea
+                id={`responsibilities-${index}`}
                 value={exp.responsibilities}
                 onChange={(e) =>
                   dispatch(
@@ -177,30 +296,73 @@ const ExperienceStep: React.FC = React.memo(() => {
                     })
                   )
                 }
-                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 rows={4}
                 aria-required="true"
+                aria-invalid={!!errors?.experiences?.[index]?.responsibilities}
+                aria-describedby={
+                  errors?.experiences?.[index]?.responsibilities
+                    ? `responsibilities-error-${index}`
+                    : undefined
+                }
               />
-              {errors?.experiences?.[index]?.responsibilities && (
-                <p className="text-red-500 text-sm">{errors.experiences[index].responsibilities}</p>
-              )}
+              <AnimatePresence>
+                {errors?.experiences?.[index]?.responsibilities && (
+                  <motion.p
+                    id={`responsibilities-error-${index}`}
+                    className="mt-1 text-sm text-red-500"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {errors.experiences[index].responsibilities}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
           </div>
-          {checkOverlappingDates(formData.experiences) && (
-            <p className="text-red-500 text-sm">Warning: Overlapping dates detected!</p>
-          )}
+
+          {/* Overlapping Dates Warning */}
+          <AnimatePresence>
+            {checkOverlappingDates(formData.experiences) && (
+              <motion.p
+                className="mt-4 text-sm text-red-500"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                Warning: Overlapping dates detected!
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
       ))}
+
+      {/* Add Experience Button */}
       <button
         onClick={handleAddExperience}
-        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+        className="px-4 py-2 bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 transition-colors"
         aria-label="Add new experience"
       >
         Add Experience
       </button>
-      {errors?.experiences && typeof errors.experiences === "string" && (
-        <p className="text-red-500 text-sm">{errors.experiences}</p>
-      )}
+
+      {/* Global Errors */}
+      <AnimatePresence>
+        {errors?.experiences && typeof errors.experiences === "string" && (
+          <motion.p
+            className="mt-2 text-sm text-red-500"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {errors.experiences}
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
 });

@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../redux/Store";
 import { Reference } from "../types/form";
 import { addReference, updateReference, removeReference } from "../redux/FormSlice";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ReferencesStepProps {
   skipReferences: boolean;
@@ -15,7 +16,7 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
     const formData = useSelector((state: RootState) => state.form.formData);
     const errors = useSelector((state: RootState) => state.form.errors);
 
-
+    
     const handleAddReference = useCallback(() => {
 
       dispatch(
@@ -30,24 +31,26 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
 
     const handleRemoveReference = useCallback(
       (index: number) => {
-       
         dispatch(removeReference(index));
       },
       [dispatch]
     );
 
     const handleClearReferences = useCallback(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      formData.references.forEach((_) => {
+      formData.references.forEach((_, i) => {
         dispatch(removeReference(0)); 
       });
     }, [dispatch, formData.references]);
 
     return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">References</h2>
-        <label className="block text-sm font-medium">
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">References</h2>
+        <label
+          htmlFor="skipReferences"
+          className="flex items-center text-sm font-semibold text-gray-700 dark:text-gray-200"
+        >
           <input
+            id="skipReferences"
             type="checkbox"
             checked={skipReferences}
             onChange={() => {
@@ -56,28 +59,40 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
                 handleClearReferences();
               }
             }}
-            className="mr-2"
+            className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
           />
           Skip adding references
         </label>
         {!skipReferences && (
           <>
             {formData.references.map((ref: Reference, index: number) => (
-              <div key={index} className="border p-4 rounded dark:border-gray-600">
-                <div className="flex justify-between">
-                  <h3 className="text-lg font-medium">Reference {index + 1}</h3>
+              <div
+                key={index}
+                className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-600"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Reference {index + 1}
+                  </h3>
                   <button
                     onClick={() => handleRemoveReference(index)}
-                    className="text-red-500 hover:text-red-700"
+                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                     aria-label={`Remove reference ${index + 1}`}
                   >
                     Remove
                   </button>
                 </div>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Name */}
                   <div>
-                    <label className="block text-sm font-medium">Name</label>
+                    <label
+                      htmlFor={`name-${index}`}
+                      className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+                    >
+                      Name
+                    </label>
                     <input
+                      id={`name-${index}`}
                       type="text"
                       value={ref.name}
                       onChange={(e) =>
@@ -88,16 +103,39 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
                           })
                         )
                       }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       aria-required="true"
+                      aria-invalid={!!errors?.references?.[index]?.name}
+                      aria-describedby={
+                        errors?.references?.[index]?.name ? `name-error-${index}` : undefined
+                      }
                     />
-                    {errors?.references?.[index]?.name && (
-                      <p className="text-red-500 text-sm">{errors.references[index].name}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors?.references?.[index]?.name && (
+                        <motion.p
+                          id={`name-error-${index}`}
+                          className="mt-1 text-sm text-red-500"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {errors.references[index].name}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
+
+                  {/* Relationship */}
                   <div>
-                    <label className="block text-sm font-medium">Relationship</label>
+                    <label
+                      htmlFor={`relationship-${index}`}
+                      className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+                    >
+                      Relationship
+                    </label>
                     <input
+                      id={`relationship-${index}`}
                       type="text"
                       value={ref.relationship}
                       onChange={(e) =>
@@ -108,16 +146,41 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
                           })
                         )
                       }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       aria-required="true"
+                      aria-invalid={!!errors?.references?.[index]?.relationship}
+                      aria-describedby={
+                        errors?.references?.[index]?.relationship
+                          ? `relationship-error-${index}`
+                          : undefined
+                      }
                     />
-                    {errors?.references?.[index]?.relationship && (
-                      <p className="text-red-500 text-sm">{errors.references[index].relationship}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors?.references?.[index]?.relationship && (
+                        <motion.p
+                          id={`relationship-error-${index}`}
+                          className="mt-1 text-sm text-red-500"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {errors.references[index].relationship}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
+
+                  {/* Company */}
                   <div>
-                    <label className="block text-sm font-medium">Company</label>
+                    <label
+                      htmlFor={`company-${index}`}
+                      className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+                    >
+                      Company
+                    </label>
                     <input
+                      id={`company-${index}`}
                       type="text"
                       value={ref.company}
                       onChange={(e) =>
@@ -128,16 +191,39 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
                           })
                         )
                       }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       aria-required="true"
+                      aria-invalid={!!errors?.references?.[index]?.company}
+                      aria-describedby={
+                        errors?.references?.[index]?.company ? `company-error-${index}` : undefined
+                      }
                     />
-                    {errors?.references?.[index]?.company && (
-                      <p className="text-red-500 text-sm">{errors.references[index].company}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors?.references?.[index]?.company && (
+                        <motion.p
+                          id={`company-error-${index}`}
+                          className="mt-1 text-sm text-red-500"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {errors.references[index].company}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
+
+                  {/* Contact */}
                   <div>
-                    <label className="block text-sm font-medium">Contact (Phone/Email)</label>
+                    <label
+                      htmlFor={`contact-${index}`}
+                      className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+                    >
+                      Contact (Phone/Email)
+                    </label>
                     <input
+                      id={`contact-${index}`}
                       type="text"
                       value={ref.contact}
                       onChange={(e) =>
@@ -148,26 +234,51 @@ const ReferencesStep: React.FC<ReferencesStepProps> = React.memo(
                           })
                         )
                       }
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                      className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                       aria-required="true"
+                      aria-invalid={!!errors?.references?.[index]?.contact}
+                      aria-describedby={
+                        errors?.references?.[index]?.contact ? `contact-error-${index}` : undefined
+                      }
                     />
-                    {errors?.references?.[index]?.contact && (
-                      <p className="text-red-500 text-sm">{errors.references[index].contact}</p>
-                    )}
+                    <AnimatePresence>
+                      {errors?.references?.[index]?.contact && (
+                        <motion.p
+                          id={`contact-error-${index}`}
+                          className="mt-1 text-sm text-red-500"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {errors.references[index].contact}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
             ))}
             <button
               onClick={handleAddReference}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              className="px-4 py-2 bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 transition-colors"
               aria-label="Add new reference"
             >
               Add Reference
             </button>
-            {errors?.references && typeof errors.references === "string" && (
-              <p className="text-red-500 text-sm">{errors.references}</p>
-            )}
+            <AnimatePresence>
+              {errors?.references && typeof errors.references === "string" && (
+                <motion.p
+                  className="mt-2 text-sm text-red-500"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {errors.references}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </>
         )}
       </div>
