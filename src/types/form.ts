@@ -26,6 +26,7 @@ export interface PersonalInfo {
     endDate?: string;
     currentlyWorking: boolean;
     responsibilities: string;
+    
   }
   
   export interface Education {

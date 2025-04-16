@@ -5,7 +5,7 @@ import { FormData, Errors } from "../../types/form";
 import { getNestedValue, FormDataPath } from "../../utils/path";
 
 interface UseFormFieldProps<T> {
-  path: FormDataPath; // e.g., "personalInfo.fullName", "experiences[0].jobTitle"
+  path: FormDataPath;
   updateAction: (value: T) => { type: string; payload: any };
 }
 
