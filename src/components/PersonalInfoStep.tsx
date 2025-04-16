@@ -1,171 +1,132 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useCallback } from "react";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
-import { updatePersonalInfo } from "../redux/FormSlice";
-import { PersonalInfo } from "../types/form";
-import { motion, AnimatePresence } from "framer-motion";
 
-interface PersonalInfoStepProps {
-  formData: { personalInfo: PersonalInfo };
-  errors: { personalInfo?: { [key: string]: string | undefined } }; // Updated type
-  dispatch: any;
-  age: number | null;
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Formik, Form } from 'formik';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+import { AppDispatch, RootState } from '../redux/Store';
+import { updatePersonalInfo } from '../redux/FormSlice';
+import { PersonalInfo, personalInfoYupSchema } from '../utils/Validations';
+import { useFormField } from './reusable/useFormField';
+import FormField from './reusable/FormField';
+import { FormDataPath } from '../utils/path';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Field configuration for PersonalInfo
+interface FieldConfig {
+  key: keyof PersonalInfo | 'country' | 'city';
+  label: string;
+  type: 'text' | 'email' | 'date' | 'select' | 'phone';
+  required?: boolean;
+  options?: string[];
+  className?: string;
+  isNested?: boolean;
 }
 
-const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData, errors, dispatch, age }) => {
-  const handleFullNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      dispatch(updatePersonalInfo({ fullName: e.target.value }));
-    },
-    [dispatch]
-  );
+const personalInfoFields: FieldConfig[] = [
+  { key: 'fullName', label: 'Full Name', type: 'text', required: true },
+  { key: 'email', label: 'Email', type: 'email', required: true },
+  { key: 'phoneNumber', label: 'Phone Number', type: 'phone', required: true },
+  { key: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: false },
+  {
+    key: 'gender',
+    label: 'Gender',
+    type: 'select',
+    required: true,
+    options: ['Male', 'Female', 'Other', 'Prefer not to say'],
+  },
+  {
+    key: 'educationLevel',
+    label: 'Education Level',
+    type: 'select',
+    required: false,
+    options: ['High School', 'Undergraduate', 'Graduate or higher'],
+  },
+  {
+    key: 'country',
+    label: 'Country',
+    type: 'text',
+    required: true,
+    isNested: true,
+    className: 'sm:col-span-1',
+  },
+  {
+    key: 'city',
+    label: 'City',
+    type: 'text',
+    required: true,
+    isNested: true,
+    className: 'sm:col-span-1',
+  },
+];
 
-  const handleEmailChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      dispatch(updatePersonalInfo({ email: e.target.value }));
-    },
-    [dispatch]
-  );
+interface PersonalInfoItemProps {
+  field: FieldConfig;
+  formData: { personalInfo: PersonalInfo };
+  errors: { personalInfo?: { [key: string]: string | undefined } };
+  age: number | null;
+  setFieldValue: (field: string, value: any) => void;
+}
 
-  const handlePhoneChange = useCallback(
-    (value: string) => {
-      let normalizedValue = value.replace(/[\s-]/g, "");
-      if (!normalizedValue.startsWith("+")) {
-        normalizedValue = `+${normalizedValue}`;
-      }
-      dispatch(updatePersonalInfo({ phoneNumber: normalizedValue }));
-    },
-    [dispatch]
-  );
+const PersonalInfoItem: React.FC<PersonalInfoItemProps> = React.memo(
+  ({ field, formData, errors, age, setFieldValue }) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const personalInfoErrors = errors.personalInfo || {};
+    const fieldPath = field.isNested
+      ? `personalInfo.currentLocation.${field.key}`
+      : `personalInfo.${field.key}`;
+    const formikFieldPath = field.isNested ? `currentLocation.${field.key}` : field.key;
 
-  const handleDobChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      dispatch(updatePersonalInfo({ dateOfBirth: e.target.value }));
-    },
-    [dispatch]
-  );
+    const { value, error, handleChange } = useFormField<string>({
+      path: fieldPath as FormDataPath,
+      updateAction: (value: string) => {
+        if (field.isNested) {
+          return updatePersonalInfo({
+            currentLocation: {
+              ...formData.personalInfo.currentLocation,
+              [field.key]: value,
+            },
+          });
+        }
+        if (field.key === 'phoneNumber') {
+          let normalizedValue = value.replace(/[\s-]/g, '');
+          if (!normalizedValue.startsWith('+')) {
+            normalizedValue = `+${normalizedValue}`;
+          }
+          return updatePersonalInfo({ phoneNumber: normalizedValue });
+        }
+        return updatePersonalInfo({ [field.key]: value });
+      },
+    });
 
-  const handleGenderChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value as PersonalInfo["gender"];
-      dispatch(updatePersonalInfo({ gender: value }));
-    },
-    [dispatch]
-  );
+    const id = field.key;
 
-  const handleCountryChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      dispatch(
-        updatePersonalInfo({
-          currentLocation: { ...formData.personalInfo.currentLocation, country: e.target.value },
-        })
-      );
-    },
-    [dispatch, formData.personalInfo.currentLocation]
-  );
-
-  const handleCityChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      dispatch(
-        updatePersonalInfo({
-          currentLocation: { ...formData.personalInfo.currentLocation, city: e.target.value },
-        })
-      );
-    },
-    [dispatch, formData.personalInfo.currentLocation]
-  );
-
-  const handleEducationLevelChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value as PersonalInfo["educationLevel"];
-      dispatch(updatePersonalInfo({ educationLevel: value }));
-    },
-    [dispatch]
-  );
-
-  // Access errors under errors.personalInfo
-  const personalInfoErrors = errors.personalInfo || {};
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Personal Information</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Full Name */}
-        <div>
-          <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
-            Full Name
-          </label>
-          <input
-            id="fullName"
-            type="text"
-            value={formData.personalInfo.fullName || ""}
-            onChange={handleFullNameChange}
-            className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            aria-required="true"
-            aria-invalid={!!personalInfoErrors.fullName}
-            aria-describedby={personalInfoErrors.fullName ? "fullName-error" : undefined}
-          />
-          <AnimatePresence>
-            {personalInfoErrors.fullName && (
-              <motion.p
-                id="fullName-error"
-                className="mt-1 text-sm text-red-500"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {personalInfoErrors.fullName}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Email */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={formData.personalInfo.email || ""}
-            onChange={handleEmailChange}
-            className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            aria-required="true"
-            aria-invalid={!!personalInfoErrors.email}
-            aria-describedby={personalInfoErrors.email ? "email-error" : undefined}
-          />
-          <AnimatePresence>
-            {personalInfoErrors.email && (
-              <motion.p
-                id="email-error"
-                className="mt-1 text-sm text-red-500"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {personalInfoErrors.email}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Phone Number */}
-        <div>
-          <label htmlFor="phoneNumber" className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
-            Phone Number
+    if (field.type === 'phone') {
+      return (
+        <div className={field.className}>
+          <label
+            htmlFor={id}
+            className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+          >
+            {field.label}
           </label>
           <PhoneInput
-            country={"in"}
-            value={formData.personalInfo.phoneNumber || ""}
-            onChange={handlePhoneChange}
+            country={'in'}
+            value={value || ''}
+            onChange={(phoneValue) => {
+              let normalizedValue = phoneValue.replace(/[\s-]/g, '');
+              if (!normalizedValue.startsWith('+')) {
+                normalizedValue = `+${normalizedValue}`;
+              }
+              handleChange(normalizedValue);
+              setFieldValue(formikFieldPath, normalizedValue);
+            }}
             inputProps={{
-              id: "phoneNumber",
-              name: "phoneNumber",
-              required: true,
+              id,
+              name: field.key,
+              required: field.required,
               autoFocus: false,
             }}
             inputClass="!mt-1 !w-full !p-3 !pl-14 !border !border-gray-300 dark:!border-gray-600 !rounded-md !shadow-sm !bg-white dark:!bg-gray-700 !text-gray-900 dark:!text-white !focus:ring-2 !focus:ring-blue-500 !focus:border-blue-500 !transition-colors"
@@ -178,161 +139,88 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
             placeholder="+91 1234567890"
           />
           <AnimatePresence>
-            {personalInfoErrors.phoneNumber && (
+            {(error || personalInfoErrors[field.key]) && (
               <motion.p
-                id="phoneNumber-error"
+                id={`${id}-error`}
                 className="mt-1 text-sm text-red-500"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                {personalInfoErrors.phoneNumber}
+                {error || personalInfoErrors[field.key]}
               </motion.p>
             )}
           </AnimatePresence>
         </div>
+      );
+    }
 
-        {/* Date of Birth */}
-        <div>
-          <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
-            Date of Birth
-          </label>
-          <input
-            id="dateOfBirth"
-            type="date"
-            value={formData.personalInfo.dateOfBirth || ""}
-            onChange={handleDobChange}
-            className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            aria-describedby={age !== null ? "age-info" : undefined}
-          />
-          {age !== null && (
-            <p id="age-info" className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Age: {age}
-            </p>
-          )}
-          <AnimatePresence>
-            {personalInfoErrors.dateOfBirth && (
-              <motion.p
-                id="dateOfBirth-error"
-                className="mt-1 text-sm text-red-500"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {personalInfoErrors.dateOfBirth}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Gender */}
-        <div>
-          <label htmlFor="gender" className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
-            Gender
-          </label>
-          <select
-            id="gender"
-            value={formData.personalInfo.gender || "Prefer not to say"}
-            onChange={handleGenderChange}
-            className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+    return (
+      <div className={field.className || (field.isNested ? 'sm:col-span-1' : '')}>
+        <FormField
+          id={id}
+          label={field.label}
+          type={field.type}
+          value={value ?? ''}
+          onChange={(value: string) => {
+            handleChange(value);
+            setFieldValue(formikFieldPath, value);
+          }}
+          error={error || personalInfoErrors[field.key]}
+          required={field.required}
+          options={field.options}
+          className={field.isNested ? 'w-full' : undefined}
+        />
+        {field.key === 'dateOfBirth' && age !== null && (
+          <p
+            id="age-info"
+            className="mt-1 text-sm text-gray-600 dark:text-gray-400"
           >
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-            <option value="Prefer not to say">Prefer not to say</option>
-          </select>
-          <AnimatePresence>
-            {personalInfoErrors.gender && (
-              <motion.p
-                id="gender-error"
-                className="mt-1 text-sm text-red-500"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {personalInfoErrors.gender}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Education Level */}
-        <div>
-          <label htmlFor="educationLevel" className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
-            Education Level
-          </label>
-          <select
-            id="educationLevel"
-            value={formData.personalInfo.educationLevel || "High School"}
-            onChange={handleEducationLevelChange}
-            className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          >
-            <option value="High School">High School</option>
-            <option value="Undergraduate">Undergraduate</option>
-            <option value="Graduate or higher">Graduate or higher</option>
-          </select>
-          <AnimatePresence>
-            {personalInfoErrors.educationLevel && (
-              <motion.p
-                id="educationLevel-error"
-                className="mt-1 text-sm text-red-500"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {personalInfoErrors.educationLevel}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Current Location */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Current Location</label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
-            <input
-              id="country"
-              type="text"
-              placeholder="Country"
-              value={formData.personalInfo.currentLocation.country || ""}
-              onChange={handleCountryChange}
-              className="w-full p-3 border border-gray-300ТЕХНОЛОГИИ dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              aria-required="true"
-              aria-invalid={!!personalInfoErrors.currentLocation}
-              aria-describedby={personalInfoErrors.currentLocation ? "currentLocation-error" : undefined}
-            />
-            <input
-              id="city"
-              type="text"
-              placeholder="City"
-              value={formData.personalInfo.currentLocation.city || ""}
-              onChange={handleCityChange}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              aria-required="true"
-              aria-invalid={!!personalInfoErrors.currentLocation}
-              aria-describedby={personalInfoErrors.currentLocation ? "currentLocation-error" : undefined}
-            />
-          </div>
-          <AnimatePresence>
-            {personalInfoErrors.currentLocation && (
-              <motion.p
-                id="currentLocation-error"
-                className="mt-1 text-sm text-red-500"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {personalInfoErrors.currentLocation}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
+            Age: {age}
+          </p>
+        )}
       </div>
+    );
+  }
+);
+
+interface PersonalInfoStepProps {
+  formData: { personalInfo: PersonalInfo };
+  errors: { personalInfo?: { [key: string]: string | undefined } };
+  age: number | null;
+}
+
+const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData, errors, age }) => {
+  const personalInfo = useSelector((state: RootState) => state.form.formData.personalInfo);
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Personal Information</h2>
+      <Formik
+        initialValues={personalInfo}
+        validationSchema={personalInfoYupSchema}
+        enableReinitialize
+        onSubmit={(values) => {
+          // Navigation handled by MultiStepForm; no need to dispatch here
+        }}
+      >
+        {({ setFieldValue }) => (
+          <Form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {personalInfoFields.map((field) => (
+              <PersonalInfoItem
+                key={field.key}
+                field={field}
+                formData={formData}
+                errors={errors}
+                age={age}
+                setFieldValue={setFieldValue}
+              />
+            ))}
+            <button type="submit" className="hidden" />
+          </Form>
+        )}
+      </Formik>
     </div>
   );
 });

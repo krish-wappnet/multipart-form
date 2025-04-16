@@ -188,7 +188,7 @@ const MultiStepForm: React.FC = () => {
   const renderStep = useCallback(() => {
     switch (currentStep) {
       case 1:
-        return <PersonalInfoStep formData={formData} errors={errors} dispatch={dispatch} age={age} />;
+        return <PersonalInfoStep formData={formData} errors={errors} age={age} />;
       case 2:
         return <ExperienceStep />;
       case 3:

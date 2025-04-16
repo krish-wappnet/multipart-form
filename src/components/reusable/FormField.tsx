@@ -10,8 +10,8 @@ interface FormFieldProps {
   value: any;
   onChange: (value: any) => void;
   error?: string;
-  options?: string[]; // For select
-  rows?: number; // For textarea
+  options?: string[]; 
+  rows?: number; 
   required?: boolean;
   className?: string;
 }
