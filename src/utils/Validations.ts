@@ -47,11 +47,20 @@ export const educationSchema = z.object({
   schoolName: z.string().min(1, "School name is required"),
   degree: z.string().min(1, "Degree is required"),
   fieldOfStudy: z.string().min(1, "Field of study is required"),
-  startYear: z.string().min(1, "Start year is required"),
-  endYear: z.string().min(1, "End year is required"),
+  startYear: z
+    .string()
+    .min(1, "Start year is required")
+    .regex(/^\d{4}$/, "Start year must be a 4-digit year"),
+  endYear: z
+    .string()
+    .min(1, "End year is required")
+    .regex(/^\d{4}$/, "End year must be a 4-digit year"),
   grade: z.string().optional(),
   certificates: z.array(z.object({ name: z.string(), file: z.any().optional() })).optional(),
-});
+}).refine(
+  (data) => Number(data.endYear) >= Number(data.startYear),
+  { message: "End year must be greater than or equal to start year", path: ["endYear"] }
+);
 
 export const skillSchema = z.object({
   name: z.string().min(1, "Skill name is required"),
@@ -68,7 +77,7 @@ export const referenceSchema = z.object({
 export const formSchema = z.object({
   personalInfo: personalInfoSchema,
   experiences: z.array(experienceSchema).min(1, "At least one experience is required"),
-  education: z.array(educationSchema).optional(),
+  education: z.array(educationSchema).min(1, "At least one education entry is required"),
   skills: z.array(skillSchema).min(1, "At least one skill is required"),
   references: z.array(referenceSchema).optional(),
   termsAgreed: z.boolean().refine((val) => val, { message: "You must agree to the terms" }),

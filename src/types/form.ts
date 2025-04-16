@@ -1,3 +1,13 @@
+
+export type Errors = {
+  personalInfo?: Partial<Record<keyof PersonalInfo, string>>;
+  experiences?: Array<Partial<Record<keyof Experience, string>>>;
+  education?: Array<Partial<Record<keyof Education, string>>>;
+  skills?: Array<Partial<Record<keyof Skill, string>>>;
+  references?: Array<Partial<Record<keyof Reference, string>>>;
+  termsAgreed?: string;
+};
+
 export interface PersonalInfo {
     fullName: string;
     email: string;

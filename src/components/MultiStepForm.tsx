@@ -74,17 +74,23 @@ const MultiStepForm: React.FC = () => {
         if (step === 1) {
           personalInfoSchema.parse(formData.personalInfo);
         } else if (step === 2) {
-          z.array(experienceSchema).min(1, "At least one experience is required").parse(formData.experiences);
-        } else if (step === 3 && formData.personalInfo.educationLevel === "Graduate or higher") {
-          z.array(educationSchema).min(1, "At least one education entry is required").parse(formData.education);
+          z.array(experienceSchema)
+            .min(1, "At least one experience is required")
+            .parse(formData.experiences);
+        } else if (step === 3) {
+          z.array(educationSchema)
+            .min(1, "At least one education entry is required")
+            .parse(formData.education);
         } else if (step === 4) {
           z.array(skillSchema).min(1, "At least one skill is required").parse(formData.skills);
         } else if (step === 5 && !skipReferences) {
-          z.array(referenceSchema).min(1, "At least one reference is required").parse(formData.references);
+          z.array(referenceSchema)
+            .min(1, "At least one reference is required")
+            .parse(formData.references);
         } else if (step === 7) {
           formSchema.parse(formData);
         }
-        dispatch(setErrors({}));
+        dispatch(setErrors({})); // Clear errors on successful validation
         return true;
       } catch (error) {
         if (error instanceof z.ZodError) {
@@ -148,17 +154,17 @@ const MultiStepForm: React.FC = () => {
             formattedErrors.termsAgreed = error.flatten().fieldErrors.termsAgreed?.[0];
           }
           dispatch(setErrors(formattedErrors));
+          return false;
         }
         return false;
       }
     },
     [dispatch, formData, skipReferences]
   );
-
   const nextStep = useCallback(() => {
     if (validateStep(currentStep)) {
       let next = currentStep + 1;
-      if (currentStep === 3 && formData.personalInfo.educationLevel !== "Graduate or higher") {
+      if (currentStep === 2 && formData.personalInfo.educationLevel !== "Graduate or higher") {
         next += 1; // Skip Education
       }
       dispatch(setCurrentStep(next));

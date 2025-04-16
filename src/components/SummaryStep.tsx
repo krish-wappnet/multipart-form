@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React, { useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../redux/Store";
 import { Experience, Education, Reference } from "../types/form";
 import { setCurrentStep } from "../redux/FormSlice";
 import { calculateTotalExperience } from "../utils/dateUtils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface SummaryStepProps {
   skipReferences: boolean;
