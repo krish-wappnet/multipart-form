@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Formik, Form } from 'formik';
+import { Formik, Form, useFormikContext } from 'formik';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { AppDispatch, RootState } from '../redux/Store';
@@ -65,7 +65,17 @@ const personalInfoFields: FieldConfig[] = [
 interface PersonalInfoItemProps {
   field: FieldConfig;
   formData: { personalInfo: PersonalInfo };
-  errors: { personalInfo?: { [key: string]: string | undefined } };
+  errors: {
+    personalInfo?: {
+      fullName?: string;
+      email?: string;
+      phoneNumber?: string;
+      dateOfBirth?: string;
+      gender?: string;
+      educationLevel?: string;
+      currentLocation?: { country?: string; city?: string };
+    };
+  };
   age: number | null;
   setFieldValue: (field: string, value: any) => void;
 }
@@ -73,11 +83,20 @@ interface PersonalInfoItemProps {
 const PersonalInfoItem: React.FC<PersonalInfoItemProps> = React.memo(
   ({ field, formData, errors, age, setFieldValue }) => {
     const dispatch = useDispatch<AppDispatch>();
+    const { errors: formikErrors } = useFormikContext<PersonalInfo>();
     const personalInfoErrors = errors.personalInfo || {};
+
     const fieldPath = field.isNested
       ? `personalInfo.currentLocation.${field.key}`
       : `personalInfo.${field.key}`;
     const formikFieldPath = field.isNested ? `currentLocation.${field.key}` : field.key;
+
+    // Error handling: Prioritize Formik for real-time, fallback to Redux
+    const errorMessage = field.isNested
+      ? formikErrors.currentLocation?.[field.key as 'country' | 'city'] ||
+        personalInfoErrors.currentLocation?.[field.key as 'country' | 'city']
+      : formikErrors[field.key as keyof Omit<PersonalInfo, 'currentLocation'>] ||
+        personalInfoErrors[field.key as keyof Omit<PersonalInfo, 'currentLocation'>];
 
     const { value, error, handleChange } = useFormField<string>({
       path: fieldPath as FormDataPath,
@@ -139,7 +158,7 @@ const PersonalInfoItem: React.FC<PersonalInfoItemProps> = React.memo(
             placeholder="+91 1234567890"
           />
           <AnimatePresence>
-            {(error || personalInfoErrors[field.key]) && (
+            {(error || errorMessage) && (
               <motion.p
                 id={`${id}-error`}
                 className="mt-1 text-sm text-red-500"
@@ -148,7 +167,7 @@ const PersonalInfoItem: React.FC<PersonalInfoItemProps> = React.memo(
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                {error || personalInfoErrors[field.key]}
+                {error || errorMessage}
               </motion.p>
             )}
           </AnimatePresence>
@@ -167,7 +186,7 @@ const PersonalInfoItem: React.FC<PersonalInfoItemProps> = React.memo(
             handleChange(value);
             setFieldValue(formikFieldPath, value);
           }}
-          error={error || personalInfoErrors[field.key]}
+          error={error || errorMessage}
           required={field.required}
           options={field.options}
           className={field.isNested ? 'w-full' : undefined}
@@ -187,7 +206,17 @@ const PersonalInfoItem: React.FC<PersonalInfoItemProps> = React.memo(
 
 interface PersonalInfoStepProps {
   formData: { personalInfo: PersonalInfo };
-  errors: { personalInfo?: { [key: string]: string | undefined } };
+  errors: {
+    personalInfo?: {
+      fullName?: string;
+      email?: string;
+      phoneNumber?: string;
+      dateOfBirth?: string;
+      gender?: string;
+      educationLevel?: string;
+      currentLocation?: { country?: string; city?: string };
+    };
+  };
   age: number | null;
 }
 
@@ -198,7 +227,18 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Personal Information</h2>
       <Formik
-        initialValues={personalInfo}
+        initialValues={{
+          fullName: personalInfo.fullName,
+          email: personalInfo.email,
+          phoneNumber: personalInfo.phoneNumber,
+          dateOfBirth: personalInfo.dateOfBirth,
+          gender: personalInfo.gender,
+          educationLevel: personalInfo.educationLevel,
+          currentLocation: {
+            country: personalInfo.currentLocation.country,
+            city: personalInfo.currentLocation.city,
+          },
+        }}
         validationSchema={personalInfoYupSchema}
         enableReinitialize
         onSubmit={(values) => {

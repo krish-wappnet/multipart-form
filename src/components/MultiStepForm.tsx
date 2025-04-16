@@ -90,17 +90,24 @@ const MultiStepForm: React.FC = () => {
         } else if (step === 7) {
           formSchema.parse(formData);
         }
-        dispatch(setErrors({})); // Clear errors on successful validation
+        dispatch(setErrors({}));
         return true;
       } catch (error) {
         if (error instanceof z.ZodError) {
           const formattedErrors: any = {};
           if (step === 1) {
-            // Flatten errors and take the first error message for each field
             const fieldErrors = error.flatten().fieldErrors;
             formattedErrors.personalInfo = {};
             Object.keys(fieldErrors).forEach((key) => {
-              formattedErrors.personalInfo[key] = fieldErrors[key]?.[0]; // Take first error message
+              if (key === 'currentLocation') {
+                formattedErrors.personalInfo.currentLocation = {};
+                Object.keys(fieldErrors.currentLocation || {}).forEach((subKey) => {
+                  formattedErrors.personalInfo.currentLocation[subKey] =
+                    fieldErrors.currentLocation?.[subKey]?.[0];
+                });
+              } else {
+                formattedErrors.personalInfo[key] = fieldErrors[key]?.[0];
+              }
             });
           } else if (step === 2) {
             if (error.errors.some((e) => e.path.length === 0)) {
@@ -154,7 +161,15 @@ const MultiStepForm: React.FC = () => {
             const fieldErrors = error.flatten().fieldErrors;
             formattedErrors.personalInfo = {};
             Object.keys(fieldErrors.personalInfo || {}).forEach((key) => {
-              formattedErrors.personalInfo[key] = fieldErrors.personalInfo?.[key]?.[0];
+              if (key === 'currentLocation') {
+                formattedErrors.personalInfo.currentLocation = {};
+                Object.keys(fieldErrors.personalInfo?.currentLocation || {}).forEach((subKey) => {
+                  formattedErrors.personalInfo.currentLocation[subKey as 'country' | 'city'] =
+                    fieldErrors.personalInfo?.currentLocation?.[subKey]?.[0];
+                });
+              } else {
+                formattedErrors.personalInfo[key] = fieldErrors.personalInfo?.[key]?.[0];
+              }
             });
             formattedErrors.experiences = fieldErrors.experiences;
             formattedErrors.education = fieldErrors.education;
@@ -169,6 +184,22 @@ const MultiStepForm: React.FC = () => {
       }
     },
     [dispatch, formData, skipReferences]
+  );
+
+  const navigateToStep = useCallback(
+    (stepId: number) => {
+      // Prevent navigation if current step is invalid
+      if (currentStep !== stepId && !validateStep(currentStep)) {
+        return;
+      }
+      // Handle Education step skip logic
+      if (stepId === 3 && formData.personalInfo.educationLevel !== "Graduate or higher") {
+        return; // Prevent navigating to Education if not applicable
+      }
+      // Allow navigation to the clicked step
+      dispatch(setCurrentStep(stepId));
+    },
+    [currentStep, dispatch, validateStep, formData.personalInfo.educationLevel]
   );
 
   const nextStep = useCallback(() => {
@@ -204,7 +235,7 @@ const MultiStepForm: React.FC = () => {
       default:
         return null;
     }
-  }, [currentStep, formData, errors, dispatch, age, skipReferences]);
+  }, [currentStep, formData, errors, age, skipReferences]);
 
   return (
     <div className={`min-h-screen p-6 ${isDark ? "dark bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}>
@@ -229,14 +260,17 @@ const MultiStepForm: React.FC = () => {
                   className="flex flex-col items-center z-10"
                   aria-current={currentStep === step.id ? "step" : undefined}
                 >
-                  <div
-                    className={`w-10 h-10 flex items-center justify-center rounded-full border-2 transition-colors duration-300 ${
+                  <button
+                    onClick={() => navigateToStep(step.id)}
+                    className={`w-10 h-10 flex items-center justify-center rounded-full border-2 transition-colors duration-300 cursor-pointer ${
                       currentStep > step.id
                         ? "bg-green-500 border-green-500 text-white"
                         : currentStep === step.id
                         ? "bg-blue-500 border-blue-500 text-white"
                         : "bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400"
-                    }`}
+                    } ${step.id === 3 && formData.personalInfo.educationLevel !== "Graduate or higher" ? "opacity-50 cursor-not-allowed" : ""}`}
+                    disabled={step.id === 3 && formData.personalInfo.educationLevel !== "Graduate or higher"}
+                    aria-label={`Go to ${step.label} step`}
                   >
                     {currentStep > step.id ? (
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,7 +279,7 @@ const MultiStepForm: React.FC = () => {
                     ) : (
                       step.id
                     )}
-                  </div>
+                  </button>
                   <span
                     className={`mt-2 text-sm font-medium text-center ${
                       currentStep >= step.id
