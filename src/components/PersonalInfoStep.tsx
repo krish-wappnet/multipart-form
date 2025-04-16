@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface PersonalInfoStepProps {
   formData: { personalInfo: PersonalInfo };
-  errors: Partial<Record<keyof PersonalInfo | "currentLocation", string>>;
+  errors: { personalInfo?: { [key: string]: string | undefined } }; // Updated type
   dispatch: any;
   age: number | null;
 }
@@ -84,6 +84,9 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
     [dispatch]
   );
 
+  // Access errors under errors.personalInfo
+  const personalInfoErrors = errors.personalInfo || {};
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Personal Information</h2>
@@ -100,11 +103,11 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
             onChange={handleFullNameChange}
             className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             aria-required="true"
-            aria-invalid={!!errors.fullName}
-            aria-describedby={errors.fullName ? "fullName-error" : undefined}
+            aria-invalid={!!personalInfoErrors.fullName}
+            aria-describedby={personalInfoErrors.fullName ? "fullName-error" : undefined}
           />
           <AnimatePresence>
-            {errors.fullName && (
+            {personalInfoErrors.fullName && (
               <motion.p
                 id="fullName-error"
                 className="mt-1 text-sm text-red-500"
@@ -113,7 +116,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                {errors.fullName}
+                {personalInfoErrors.fullName}
               </motion.p>
             )}
           </AnimatePresence>
@@ -131,11 +134,11 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
             onChange={handleEmailChange}
             className="mt-1 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             aria-required="true"
-            aria-invalid={!!errors.email}
-            aria-describedby={errors.email ? "email-error" : undefined}
+            aria-invalid={!!personalInfoErrors.email}
+            aria-describedby={personalInfoErrors.email ? "email-error" : undefined}
           />
           <AnimatePresence>
-            {errors.email && (
+            {personalInfoErrors.email && (
               <motion.p
                 id="email-error"
                 className="mt-1 text-sm text-red-500"
@@ -144,7 +147,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                {errors.email}
+                {personalInfoErrors.email}
               </motion.p>
             )}
           </AnimatePresence>
@@ -175,7 +178,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
             placeholder="+91 1234567890"
           />
           <AnimatePresence>
-            {errors.phoneNumber && (
+            {personalInfoErrors.phoneNumber && (
               <motion.p
                 id="phoneNumber-error"
                 className="mt-1 text-sm text-red-500"
@@ -184,7 +187,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                {errors.phoneNumber}
+                {personalInfoErrors.phoneNumber}
               </motion.p>
             )}
           </AnimatePresence>
@@ -208,6 +211,20 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
               Age: {age}
             </p>
           )}
+          <AnimatePresence>
+            {personalInfoErrors.dateOfBirth && (
+              <motion.p
+                id="dateOfBirth-error"
+                className="mt-1 text-sm text-red-500"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {personalInfoErrors.dateOfBirth}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Gender */}
@@ -226,6 +243,20 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
             <option value="Other">Other</option>
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
+          <AnimatePresence>
+            {personalInfoErrors.gender && (
+              <motion.p
+                id="gender-error"
+                className="mt-1 text-sm text-red-500"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {personalInfoErrors.gender}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Education Level */}
@@ -243,6 +274,20 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
             <option value="Undergraduate">Undergraduate</option>
             <option value="Graduate or higher">Graduate or higher</option>
           </select>
+          <AnimatePresence>
+            {personalInfoErrors.educationLevel && (
+              <motion.p
+                id="educationLevel-error"
+                className="mt-1 text-sm text-red-500"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {personalInfoErrors.educationLevel}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Current Location */}
@@ -255,10 +300,10 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
               placeholder="Country"
               value={formData.personalInfo.currentLocation.country || ""}
               onChange={handleCountryChange}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full p-3 border border-gray-300ТЕХНОЛОГИИ dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               aria-required="true"
-              aria-invalid={!!errors.currentLocation}
-              aria-describedby={errors.currentLocation ? "currentLocation-error" : undefined}
+              aria-invalid={!!personalInfoErrors.currentLocation}
+              aria-describedby={personalInfoErrors.currentLocation ? "currentLocation-error" : undefined}
             />
             <input
               id="city"
@@ -268,12 +313,12 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
               onChange={handleCityChange}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               aria-required="true"
-              aria-invalid={!!errors.currentLocation}
-              aria-describedby={errors.currentLocation ? "currentLocation-error" : undefined}
+              aria-invalid={!!personalInfoErrors.currentLocation}
+              aria-describedby={personalInfoErrors.currentLocation ? "currentLocation-error" : undefined}
             />
           </div>
           <AnimatePresence>
-            {errors.currentLocation && (
+            {personalInfoErrors.currentLocation && (
               <motion.p
                 id="currentLocation-error"
                 className="mt-1 text-sm text-red-500"
@@ -282,7 +327,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = React.memo(({ formData
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                {errors.currentLocation}
+                {personalInfoErrors.currentLocation}
               </motion.p>
             )}
           </AnimatePresence>

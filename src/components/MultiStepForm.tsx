@@ -96,7 +96,12 @@ const MultiStepForm: React.FC = () => {
         if (error instanceof z.ZodError) {
           const formattedErrors: any = {};
           if (step === 1) {
-            formattedErrors.personalInfo = error.flatten().fieldErrors;
+            // Flatten errors and take the first error message for each field
+            const fieldErrors = error.flatten().fieldErrors;
+            formattedErrors.personalInfo = {};
+            Object.keys(fieldErrors).forEach((key) => {
+              formattedErrors.personalInfo[key] = fieldErrors[key]?.[0]; // Take first error message
+            });
           } else if (step === 2) {
             if (error.errors.some((e) => e.path.length === 0)) {
               formattedErrors.experiences = "At least one experience is required";
@@ -146,12 +151,16 @@ const MultiStepForm: React.FC = () => {
               }, []);
             }
           } else if (step === 7) {
-            formattedErrors.personalInfo = error.flatten().fieldErrors.personalInfo;
-            formattedErrors.experiences = error.flatten().fieldErrors.experiences;
-            formattedErrors.education = error.flatten().fieldErrors.education;
-            formattedErrors.skills = error.flatten().fieldErrors.skills;
-            formattedErrors.references = error.flatten().fieldErrors.references;
-            formattedErrors.termsAgreed = error.flatten().fieldErrors.termsAgreed?.[0];
+            const fieldErrors = error.flatten().fieldErrors;
+            formattedErrors.personalInfo = {};
+            Object.keys(fieldErrors.personalInfo || {}).forEach((key) => {
+              formattedErrors.personalInfo[key] = fieldErrors.personalInfo?.[key]?.[0];
+            });
+            formattedErrors.experiences = fieldErrors.experiences;
+            formattedErrors.education = fieldErrors.education;
+            formattedErrors.skills = fieldErrors.skills;
+            formattedErrors.references = fieldErrors.references;
+            formattedErrors.termsAgreed = fieldErrors.termsAgreed?.[0];
           }
           dispatch(setErrors(formattedErrors));
           return false;
@@ -161,6 +170,7 @@ const MultiStepForm: React.FC = () => {
     },
     [dispatch, formData, skipReferences]
   );
+
   const nextStep = useCallback(() => {
     if (validateStep(currentStep)) {
       let next = currentStep + 1;

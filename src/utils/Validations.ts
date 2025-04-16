@@ -89,3 +89,16 @@ export type Education = z.infer<typeof educationSchema>;
 export type Skill = z.infer<typeof skillSchema>;
 export type Reference = z.infer<typeof referenceSchema>;
 export type FormData = z.infer<typeof formSchema>;
+
+export type PersonalInfoErrors = {
+  fullName?: string[];
+  email?: string[];
+  phoneNumber?: string[];
+  dateOfBirth?: string[];
+  gender?: string[];
+  educationLevel?: string[];
+  currentLocation?: {
+    country?: string[];
+    city?: string[];
+  };
+};
